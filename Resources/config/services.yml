@@ -1,0 +1,7 @@
+parameters:
+#    darkwood_generator.example.class: Darkwood\GeneratorBundle\Example
+
+services:
+#    darkwood_generator.example:
+#        class: %darkwood_generator.example.class%
+#        arguments: [@service_id, "plain_value", %parameter%]
