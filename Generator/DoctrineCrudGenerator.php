@@ -164,4 +164,102 @@ class DoctrineCrudGenerator extends BaseGenerator
             'format'            => $this->format,
         ));
     }
+
+    /**
+     * Generates the functional test class only.
+     *
+     */
+    protected function generateTestClass()
+    {
+        $parts = explode('\\', $this->entity);
+        $entityClass = array_pop($parts);
+        $entityNamespace = implode('\\', $parts);
+
+        $dir    = $this->toBundle->getPath() .'/Tests/Controller';
+        $target = $dir .'/'. str_replace('\\', '/', $entityNamespace).'/'. $entityClass .'ControllerTest.php';
+
+        $this->renderFile('crud/tests/test.php.twig', $target, array(
+            'route_prefix'      => $this->routePrefix,
+            'route_name_prefix' => $this->routeNamePrefix,
+            'entity'            => $this->entity,
+            'bundle'            => $this->bundle->getName(),
+            'entity_class'      => $entityClass,
+            'namespace'         => $this->bundle->getNamespace(),
+            'toNamespace'       => $this->toBundle->getNamespace(),
+            'entity_namespace'  => $entityNamespace,
+            'actions'           => $this->actions,
+            'form_type_name'    => strtolower(str_replace('\\', '_', $this->bundle->getNamespace()).($parts ? '_' : '').implode('_', $parts).'_'.$entityClass.'Type'),
+        ));
+    }
+
+    /**
+     * Generates the index.html.twig template in the final bundle.
+     *
+     * @param string $dir The path to the folder that hosts templates in the bundle
+     */
+    protected function generateIndexView($dir)
+    {
+        $this->renderFile('crud/views/index.html.twig.twig', $dir.'/index.html.twig', array(
+                'bundle'            => $this->bundle->getName(),
+                'toBundle'          => $this->toBundle->getName(),
+                'entity'            => $this->entity,
+                'fields'            => $this->metadata->fieldMappings,
+                'actions'           => $this->actions,
+                'record_actions'    => $this->getRecordActions(),
+                'route_prefix'      => $this->routePrefix,
+                'route_name_prefix' => $this->routeNamePrefix,
+            ));
+    }
+
+    /**
+     * Generates the show.html.twig template in the final bundle.
+     *
+     * @param string $dir The path to the folder that hosts templates in the bundle
+     */
+    protected function generateShowView($dir)
+    {
+        $this->renderFile('crud/views/show.html.twig.twig', $dir.'/show.html.twig', array(
+                'bundle'            => $this->bundle->getName(),
+                'toBundle'          => $this->toBundle->getName(),
+                'entity'            => $this->entity,
+                'fields'            => $this->metadata->fieldMappings,
+                'actions'           => $this->actions,
+                'route_prefix'      => $this->routePrefix,
+                'route_name_prefix' => $this->routeNamePrefix,
+            ));
+    }
+
+    /**
+     * Generates the new.html.twig template in the final bundle.
+     *
+     * @param string $dir The path to the folder that hosts templates in the bundle
+     */
+    protected function generateNewView($dir)
+    {
+        $this->renderFile('crud/views/new.html.twig.twig', $dir.'/new.html.twig', array(
+                'bundle'            => $this->bundle->getName(),
+                'toBundle'          => $this->toBundle->getName(),
+                'entity'            => $this->entity,
+                'route_prefix'      => $this->routePrefix,
+                'route_name_prefix' => $this->routeNamePrefix,
+                'actions'           => $this->actions,
+            ));
+    }
+
+    /**
+     * Generates the edit.html.twig template in the final bundle.
+     *
+     * @param string $dir The path to the folder that hosts templates in the bundle
+     */
+    protected function generateEditView($dir)
+    {
+        $this->renderFile('crud/views/edit.html.twig.twig', $dir.'/edit.html.twig', array(
+                'route_prefix'      => $this->routePrefix,
+                'route_name_prefix' => $this->routeNamePrefix,
+                'entity'            => $this->entity,
+                'bundle'            => $this->bundle->getName(),
+                'toBundle'          => $this->toBundle->getName(),
+                'actions'           => $this->actions,
+            ));
+    }
 }
