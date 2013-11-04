@@ -1,0 +1,11 @@
+{% extends 'crud/actions/new.php.twig' %}
+
+{% block method_body %}
+        $entity = new {{ entity_class }}();
+        $entity->setCreated(new \DateTime());
+{% endblock method_body %}
+
+{% block method_return %}
+        return $this->manage($entity);
+{% endblock method_return %}
+

@@ -41,8 +41,10 @@ class GenerateBundleCommand extends BaseCommand
     {
         $skeletonDirs = parent::getSkeletonDirs($bundle);
 
-        $skeletonDirs[] = __DIR__.'/../Resources/skeleton';
-        $skeletonDirs[] = __DIR__.'/../Resources';
+        array_splice($skeletonDirs, -2, 0, array(
+            __DIR__.'/../Resources/skeleton',
+            __DIR__.'/../Resources',
+        ));
 
         return $skeletonDirs;
     }

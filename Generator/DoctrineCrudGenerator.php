@@ -11,7 +11,9 @@
 
 namespace Darkwood\GeneratorBundle\Generator;
 
+use Sensio\Bundle\GeneratorBundle\Command\Validators;
 use Sensio\Bundle\GeneratorBundle\Generator\DoctrineCrudGenerator as BaseGenerator;
+use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 
@@ -22,7 +24,20 @@ use Doctrine\ORM\Mapping\ClassMetadataInfo;
  */
 class DoctrineCrudGenerator extends BaseGenerator
 {
+    protected $entityLink;
+    protected $bundleService;
     protected $toBundle;
+    protected $toBundleService;
+    protected $templatePrefix;
+
+    protected function parseBundleNamespace($namespace)
+    {
+        $namespace = Validators::validateBundleNamespace($namespace);
+
+        $pos = strpos($namespace, '\\');
+
+        return array(substr($namespace, 0, $pos), substr($namespace, $pos + 1));
+    }
 
     /**
      * Generate the CRUD controller.
@@ -51,9 +66,15 @@ class DoctrineCrudGenerator extends BaseGenerator
         }
 
         $this->entity   = $entity;
+        $this->entityLink = Container::underscore(str_replace('\\', ':', $entity));
         $this->bundle   = $bundle;
+        list($bundleNamespace, $bundleEntity) = $this->parseBundleNamespace($this->bundle->getNamespace());
+        $this->bundleService = lcfirst(Container::camelize(substr($bundleEntity, 0, -6)));
         $this->toBundle = $toBundle;
+        list($toBundleNamespace, $toBundleEntity) = $this->parseBundleNamespace($this->toBundle->getNamespace());
+        $this->toBundleService = lcfirst(Container::camelize(substr($toBundleEntity, 0, -6)));
         $this->metadata = $metadata;
+        $this->templatePrefix = (preg_match('/AdminBundle$/', $this->toBundle->getName())) ? 'admin_' : '';
         $this->setFormat($format);
 
         $this->generateControllerClass($forceOverwrite);
@@ -100,5 +121,47 @@ class DoctrineCrudGenerator extends BaseGenerator
                 $this->format = 'yml';
                 break;
         }
+    }
+
+    /**
+     * Generates the controller class only.
+     *
+     */
+    protected function generateControllerClass($forceOverwrite)
+    {
+        $dir = $this->toBundle->getPath();
+
+        $parts = explode('\\', $this->entity);
+        $entityClass = array_pop($parts);
+        $entityNamespace = implode('\\', $parts);
+
+        $target = sprintf(
+            '%s/Controller/%s/%sController.php',
+            $dir,
+            str_replace('\\', '/', $entityNamespace),
+            $entityClass
+        );
+
+        if (!$forceOverwrite && file_exists($target)) {
+            throw new \RuntimeException('Unable to generate the controller as it already exists.');
+        }
+
+        $this->renderFile('crud/controller.php.twig', $target, array(
+            'actions'           => $this->actions,
+            'route_prefix'      => $this->routePrefix,
+            'route_name_prefix' => $this->routeNamePrefix,
+            'template_prefix'   => $this->templatePrefix,
+            'bundle'            => $this->bundle->getName(),
+            'bundleService'     => $this->bundleService,
+            'toBundle'          => $this->toBundle->getName(),
+            'toBundleService'   => $this->toBundleService,
+            'entity'            => $this->entity,
+            'entityLink'        => $this->entityLink,
+            'entity_class'      => $entityClass,
+            'namespace'         => $this->bundle->getNamespace(),
+            'toNamespace'       => $this->toBundle->getNamespace(),
+            'entity_namespace'  => $entityNamespace,
+            'format'            => $this->format,
+        ));
     }
 }

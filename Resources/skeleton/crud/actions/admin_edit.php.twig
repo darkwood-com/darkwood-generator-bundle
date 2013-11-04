@@ -1,0 +1,18 @@
+{% extends 'crud/actions/edit.php.twig' %}
+
+{% block method_body %}
+        $em = $this->getDoctrine()->getManager();
+
+        $entity = $em->getRepository('{{ bundle }}:{{ entity }}')->find($id);
+
+        if (!$entity) {
+            throw $this->createNotFoundException('Unable to find {{ entity }} entity.');
+        }
+        $entity->setCreated(new \DateTime());
+{% endblock method_body %}
+
+{% block method_return %}
+        return $this->manage($entity);
+{% endblock method_return %}
+
+{% block form %}{% endblock %}

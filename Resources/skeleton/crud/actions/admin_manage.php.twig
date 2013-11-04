@@ -1,0 +1,43 @@
+    /**
+     * Creates a form to create a {{ entity }} entity.
+     *
+     * @param \{{ namespace }}\Entity\{{ entity }} $entity The entity
+     *
+     * @return \Symfony\Component\Form\Form The form
+     */
+    private function manage({{ entity }} $entity)
+    {
+        $mode = $entity->getId() ? 'edit' : 'new';
+
+        $form = $this->createForm(new {{ entity }}Type(), $entity, array(
+            'action' => ($mode === 'new') ? $this->generateUrl('{{ route_name_prefix }}_new') : $this->generateUrl('{{ route_name_prefix }}_edit', array('id' => $entity->getId())),
+        ));
+
+        $form->add('submit', 'submit', array('label' => $mode === 'new' ? 'Create' : 'Update'));
+
+        if ('POST' === $this->getRequest()->getMethod()) {
+            $request = $this->getRequest();
+
+            $form->handleRequest($request);
+
+            if ($form->isValid()) {
+                /** @var \{{ namespace }}\Services\{{ entity }}Service $entityService */
+                $entityService = $this->get('{{ bundleService }}.{{ entityLink }}');
+                $entityService->save($entity);
+
+                return $this->redirect($this->generateUrl('{{ route_name_prefix }}_edit', array('id' => $entity->getId())));
+            }
+        }
+
+        $params = array('entity' => $entity);
+        if ($mode === 'new') {
+            $params['form'] = $form->createView();
+        } else {
+            $deleteForm = $this->createDeleteForm($entity->getId());
+
+            $params['edit_form'] = $form->createView();
+            $params['delete_form'] = $deleteForm->createView();
+        }
+
+        return $this->render('{{ bundle }}:{{ entity|replace({'\\': '/'}) }}'.$mode.'.html.twig', $params);
+    }
